@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>See. Say. Own. — Demo</title>
+<style>
+  :root{--bg:#f7f5f0;--ink:#1c2430;--mut:#5d6877;--teal:#2a8f85;--tealD:#1f6f67;--line:#e7e0d4;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:Georgia,'Times New Roman',serif;background:var(--bg);color:var(--ink);min-height:100vh;padding:40px 56px 48px;}
+  .frame{width:100%;max-width:1040px;margin:0 auto;}
+  .micro{font-family:'Courier New',monospace;font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--mut);}
+  .btn{display:inline-block;border:none;cursor:pointer;font-family:inherit;background:var(--ink);color:#fff;padding:14px 28px;border-radius:999px;font-size:15px;text-decoration:none;transition:transform .15s ease,box-shadow .15s ease;}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(28,36,48,.25);}
+  .btn.teal{background:var(--teal);}
+  .btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--ink);}
+  #errbar{display:none;background:#c05b4d;color:#fff;font-family:'Courier New',monospace;font-size:12px;padding:8px 14px;border-radius:8px;margin-bottom:12px;}
+  .bar{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+  .bar a{color:var(--mut);text-decoration:none;}
+  .bar a:hover{color:var(--tealD);}
+
+  /* MENU — editorial cover */
+  #menu{position:relative;min-height:calc(100vh - 88px);display:flex;flex-direction:column;}
+  #menu h1{font-weight:normal;font-size:clamp(64px,12vw,130px);line-height:.95;letter-spacing:-.03em;margin:34px 0 0;}
+  #menu h1 em{font-style:italic;color:var(--teal);}
+  #quote{position:absolute;right:0;top:150px;width:260px;border-top:2px solid var(--ink);padding-top:14px;font-size:18px;line-height:1.5;font-style:italic;}
+  .cover-foot{margin-top:auto;padding-top:48px;display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;}
+  #founders{display:flex;gap:12px;align-items:center;}
+  .av{width:44px;height:44px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-style:italic;font-size:18px;}
+  .fcap{font-size:13px;color:var(--mut);margin-left:6px;}
+  #startBtn{border:0;background:transparent;cursor:pointer;font-family:inherit;font-size:18px;color:var(--tealD);padding:0 0 3px;border-bottom:1px solid var(--tealD);}
+  #startBtn:hover{color:var(--ink);border-color:var(--ink);}
+
+  /* GAME + RESULT — same editorial language */
+  #game,#result{display:none;max-width:720px;margin:0 auto;}
+  #topbar{display:flex;justify-content:space-between;align-items:center;padding-bottom:14px;border-bottom:2px solid var(--ink);}
+  #dots{display:flex;gap:6px;margin:18px 0 26px;}
+  .dot{width:9px;height:9px;border-radius:50%;background:#e3ddd0;}
+  .dot.done{background:var(--teal);}
+  .dot.now{background:var(--ink);}
+  #scenario{font-size:26px;line-height:1.4;margin-bottom:28px;}
+  #opts .opt{display:block;width:100%;text-align:left;font-family:inherit;font-size:16px;padding:16px 0;border:0;border-top:1px solid var(--line);background:transparent;cursor:pointer;transition:all .15s ease;line-height:1.5;color:var(--ink);}
+  #opts .opt:last-child{border-bottom:1px solid var(--line);}
+  #opts .opt:hover{color:var(--tealD);padding-left:10px;}
+  #result .micro.top{padding-bottom:14px;border-bottom:2px solid var(--ink);}
+  #result h2{font-size:clamp(40px,7vw,64px);font-weight:normal;line-height:1.05;letter-spacing:-.02em;margin:22px 0 6px;}
+  #persTag{font-family:'Courier New',monospace;font-size:12px;letter-spacing:.25em;text-transform:uppercase;color:var(--tealD);}
+  #persBody{font-size:18px;line-height:1.7;font-style:italic;margin:16px 0 30px;border-top:2px solid var(--ink);padding-top:16px;}
+  .chgrid{display:grid;grid-template-columns:150px 1fr 34px;gap:10px 14px;align-items:center;margin:12px 0 30px;}
+  .chname{font-family:'Courier New',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);}
+  .chtrack{height:10px;background:#ece6da;border-radius:99px;overflow:hidden;}
+  .chfill{height:100%;background:var(--teal);width:0;border-radius:99px;transition:width 1s ease .2s;}
+  .chnum{font-family:'Courier New',monospace;font-size:13px;text-align:right;}
+  .menuRow{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+
+  .toggles{position:fixed;bottom:16px;right:18px;display:flex;gap:8px;z-index:50;}
+  .chip{font-family:'Courier New',monospace;font-size:11px;border:1px solid var(--line);border-radius:99px;padding:6px 13px;background:#fff;color:var(--ink);cursor:pointer;user-select:none;}
+  .chip.off{opacity:.45;}
+
+  @media(max-width:820px){
+    body{padding:28px 22px 40px;}
+    #quote{position:static;width:100%;max-width:420px;margin:28px 0 0;}
+    .chgrid{grid-template-columns:110px 1fr 28px;}
+  }
+</style>
+</head>
+<body>
+<div class="toggles"><span class="chip" id="musicChip">&#9834; Music</span></div>
+<div class="frame">
+  <div id="errbar"></div>
+
+  <!-- MENU -->
+  <div id="menu">
+    <div class="micro bar"><span>Risk Culture Builders</span><span>The Demo &middot; Issue 01</span></div>
+    <h1>See. Say.<br><em>Own.</em></h1>
+    <div id="quote">&ldquo;It is the instinct they reach for first when the moment arrives unannounced.&rdquo;</div>
+    <div class="cover-foot">
+      <div id="founders">
+        <div class="av" style="background:#8a7b62">H</div>
+        <div class="av" style="background:#5b8fa8">Z</div>
+        <div class="av" style="background:#2c3e5d">T</div>
+        <div class="av" style="background:#8a5a3b">O</div>
+        <span class="fcap">Horst, Zlatko, Tahir &amp; Olayini B.</span>
+      </div>
+      <button id="startBtn">Turn the page &rarr;</button>
+    </div>
+  </div>
+
+  <!-- GAME -->
+  <div id="game">
+    <div id="topbar">
+      <span class="micro" id="counter">Moment 1 of 5</span>
+      <span class="chip" id="quitChip">Quit</span>
+    </div>
+    <div id="dots"></div>
+    <div id="scenario"></div>
+    <div id="opts"></div>
+  </div>
+
+  <!-- RESULT -->
+  <div id="result">
+    <div class="micro top">Your instinct</div>
+    <h2 id="persName"></h2>
+    <div id="persTag"></div>
+    <p id="persBody"></p>
+    <div class="micro">Where your instincts clustered</div>
+    <div class="chgrid" id="chgrid"></div>
+    <div class="menuRow">
+      <button class="btn teal" id="againBtn">Play again</button>
+      <a class="btn ghost" href="https://riskculturebuilders.com" target="_blank" rel="noopener">Visit Risk Culture Builders</a>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+window.onerror = function(msg){ var e=document.getElementById("errbar");
+  e.style.display="block"; e.textContent="Script error: "+msg; };
+
+/* ---------------- audio ---------------- */
+var AC=null, masterGain=null, musicOn=false, musicTimer=null;
+function ac(){ if(!AC){ AC=new (window.AudioContext||window.webkitAudioContext)();
+  masterGain=AC.createGain(); masterGain.gain.value=0.5; masterGain.connect(AC.destination);} return AC; }
+function tone(f,d,type,v,when){ try{ var c=ac();
+  var o=c.createOscillator(), g=c.createGain();
+  o.type=type||"sine"; o.frequency.value=f;
+  var t=c.currentTime+(when||0);
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.linearRampToValueAtTime(v||0.12,t+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+  o.connect(g); g.connect(masterGain);
+  o.start(t); o.stop(t+d+0.05);
+}catch(e){} }
+function sfx(k){
+  if(k==="pick"){ tone(440,0.12,"sine",0.09); tone(660,0.15,"sine",0.07,0.08); }
+  else if(k==="end"){ tone(330,0.25,"triangle",0.09); tone(415,0.25,"triangle",0.09,0.18);
+    tone(494,0.35,"triangle",0.09,0.36); tone(659,0.45,"triangle",0.08,0.55); }
+}
+function startMusic(){ if(musicTimer) return; musicOn=true;
+  var chords=[[146.8,174.6,220],[130.8,164.8,196],[110,130.8,164.8],[123.5,146.8,185]], ci=0;
+  var step=function(){ if(!musicOn) return;
+    var ch=chords[ci%chords.length]; ci++;
+    for(var i=0;i<ch.length;i++) tone(ch[i],7.5,"sine",0.032,i*0.4);
+    tone(ch[0]/2,8,"sine",0.028,0);
+    if(Math.random()<0.5) tone(587+Math.random()*300,1.5,"sine",0.013,2+Math.random()*3);
+  };
+  step(); musicTimer=setInterval(step,7600);
+}
+function stopMusic(){ musicOn=false; if(musicTimer){ clearInterval(musicTimer); musicTimer=null; } }
+var chip=document.getElementById("musicChip");
+chip.onclick=function(){ ac();
+  if(AC.state==="suspended") AC.resume();
+  if(musicOn){ stopMusic(); chip.classList.add("off"); }
+  else { startMusic(); chip.classList.remove("off"); }
+};
+document.addEventListener("click",function(){ try{ ac(); if(AC.state==="suspended") AC.resume(); }catch(e){} });
+
+/* ---------------- values & personas ---------------- */
+var VALUES={
+  honesty:{label:"Honesty"}, ownership:{label:"Ownership"}, reality:{label:"Reality"},
+  practice:{label:"Practice"}, full:{label:"Full response"}
+};
+var KEYS=["honesty","ownership","reality","practice","full"];
+
+var PERSONAS={
+  honesty:  {name:"The Truth-Teller",
+    body:"Across every situation, your first instinct was to say the true thing, out loud, early. Not to win — because you paid a price for it in some of these moments — but because you have noticed that the truth becomes more expensive the longer it waits. Risk cultures are built by people willing to be briefly unpopular while the information is still useful."},
+  ownership:{name:"The Conviction Owner",
+    body:"You repeatedly took things on that were not, strictly speaking, yours. The message nobody sent, the mess nobody claimed, the person nobody was officially responsible for. Risk cultures are built by people who act first and ask whose job it was later — your one watch-out is learning to hand some of it back."},
+  reality:  {name:"The Reality Keeper",
+    body:"Before acting, you went and looked. You asked what was actually needed, what was actually known, whether the story in front of you was the whole story. Risk cultures are built by people who keep checking the world against the plan. Your one watch-out is that looking can become a way of postponing."},
+  practice: {name:"The Practitioner",
+    body:"Your instinct was to do the concrete thing in front of you — comfort who is near you, give what you have, complete your own part well. Risk cultures are built on people who close the gap between what is said and what is done. Your one watch-out is that quiet competence can leave the system unchanged."},
+  full:     {name:"The Full Responder",
+    body:"Again and again, you reached for the change that outlasts the moment: the new arrangement, the better process, the help that keeps helping after you leave. Risk cultures are built by people who improve the conditions, not just the instance. Your one watch-out is not to leave the person in front of you waiting while you redesign the world."},
+  mixed:    {name:"The Mixed Case",
+    body:"You do not have one instinct; you have a rotation. Different situations called out different responses, which is arguably the most human result available. Most risk-culture strengths come from knowing which instinct a moment needs — that flexibility is your asset, and your work is noticing the pattern anyway."}
+};
+
+/* ---------------- scenarios ---------------- */
+var SCN=[
+{id:1, t:"Your grandfather is dying in a hospital across town. Your six-year-old is at your feet, crying too hard to speak. You cannot be in both places at once. What do you do first?",
+ opts:[
+  {l:"Go to your grandfather. Time with him is the one thing that cannot be borrowed back.", p:"reality"},
+  {l:"Stay with your child. Whoever is in front of you gets you first.", p:"practice"},
+  {l:"Phone the hospital, tell them exactly what is happening, and ask what your grandfather needs most in the next hour.", p:"full"},
+  {l:"Tell your child the truth about how sick Grandpa is, take them with you, and let them be part of it.", p:"honesty"},
+  {l:"Arrange the grandparent visit, settle the childcare, sort the logistics — and make both happen by nightfall.", p:"ownership"}]},
+{id:2, t:"Your car breaks down on a rough stretch of road. While you wait for the tow, you see someone begging at the junction ahead. It is cold, and getting dark.",
+ opts:[
+  {l:"Walk over, ask their name, and give them what you have — cash, a jacket, whatever helps now.", p:"practice"},
+  {l:"Go and talk to them first. Find out what they actually need before deciding what to give.", p:"reality"},
+  {l:"Call the local shelter, wait with them until you know someone is coming, then leave your number.", p:"full"},
+  {l:"Give them what you can, and say plainly that you cannot do more than that today.", p:"honesty"},
+  {l:"Take charge: get them somewhere warm yourself, and deal with the tow and the timing afterwards.", p:"ownership"}]},
+{id:3, t:"You promised to help a close friend move house on Saturday. On Friday night, you are offered overtime that would finally clear a debt you have carried for two years.",
+ opts:[
+  {l:"Tell your friend tonight, before the weekend starts, and offer a genuine alternative day.", p:"honesty"},
+  {l:"Honour the promise. Debts get cleared eventually; trust is harder to rebuild.", p:"practice"},
+  {l:"Do both: help in the morning, work the afternoon, and accept you will be useless by Sunday.", p:"ownership"},
+  {l:"Work out what the overtime is actually worth after tax, and what the broken promise would actually cost, then decide.", p:"reality"},
+  {l:"Ask other friends to cover your share of the move, so the friend is fully helped and you still take the work.", p:"full"}]},
+{id:4, t:"Four of you share a project. The deadline is Friday. Three of them are coasting, and the weakest part of the work is the part nobody is doing.",
+ opts:[
+  {l:"Say it plainly in the group today: this part is missing, and Friday is not moving.", p:"honesty"},
+  {l:"Sit down tonight and do the missing part yourself.", p:"ownership"},
+  {l:"Ask each of them what is going on — the coasting usually has a reason.", p:"reality"},
+  {l:"Deliver your own part impeccably, and let the finished work make the argument for you.", p:"practice"},
+  {l:"Propose a new way of splitting the work with a check-in on Wednesday, so this never happens again.", p:"full"}]},
+{id:5, t:"A close friend announces a big life decision. You think, from what you know, that it is a mistake. They did not ask what you think.",
+ opts:[
+  {l:"Tell them honestly that you think it is a mistake — once, kindly, and then support whatever they choose.", p:"honesty"},
+  {l:"Say congratulations, and quietly start building a fallback plan they can use if it goes wrong.", p:"ownership"},
+  {l:"Ask them first what they know that you do not. You may be working from an old picture.", p:"reality"},
+  {l:"Help with the first practical step this week, whatever you think of the destination.", p:"practice"},
+  {l:"Put them in a room with two people who made the same decision and lived with it.", p:"full"}]}
+];
+
+/* ---------------- helpers ---------------- */
+function $(id){ return document.getElementById(id); }
+function shuffle(a){ a=a.slice();
+  for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+  return a; }
+function show(id){ ["menu","game","result"].forEach(function(s){ $(s).style.display=(s===id)?(s==="menu"?"flex":"block"):"none"; }); window.scrollTo(0,0); }
+
+/* ---------------- state ---------------- */
+var run=[], idx=0, tallies={}, lastPick=null;
+
+function startRun(){
+  run = shuffle(SCN);
+  idx=0; tallies={}; KEYS.forEach(function(k){ tallies[k]=0; }); lastPick=null;
+  buildDots(); show("game"); renderQ();
+}
+function buildDots(){
+  var d=$("dots"); d.innerHTML="";
+  run.forEach(function(){ var s=document.createElement("span"); s.className="dot"; d.appendChild(s); });
+}
+function paintDots(){
+  var dots=$("dots").children;
+  for(var i=0;i<dots.length;i++){ dots[i].className="dot"+(i<idx?" done":(i===idx?" now":"")); }
+}
+function renderQ(){
+  $("counter").textContent="Moment "+(idx+1)+" of "+run.length;
+  paintDots();
+  var q=run[idx];
+  $("scenario").textContent=q.t;
+  var box=$("opts"); box.innerHTML="";
+  shuffle(q.opts).forEach(function(o){
+    var b=document.createElement("button"); b.className="opt"; b.textContent=o.l;
+    b.onclick=function(){ pick(o); };
+    box.appendChild(b);
+  });
+}
+function pick(o){
+  tallies[o.p]=tallies[o.p]+1;
+  lastPick=o.p;
+  sfx("pick");
+  if(idx===run.length-1){ finish(); } else { idx++; renderQ(); }
+}
+
+function finish(){
+  show("result");
+  sfx("end");
+  var max=0, distinct=0;
+  KEYS.forEach(function(k){ if(tallies[k]>max) max=tallies[k]; });
+  KEYS.forEach(function(k){ if(tallies[k]===max) distinct++; });
+  var winner="mixed";
+  if(distinct===1){
+    KEYS.forEach(function(k){ if(tallies[k]===max) winner=k; });
+  } else if(lastPick && tallies[lastPick]===max){
+    winner=lastPick; // tie-break: your most recent instinct
+  }
+  var pr=PERSONAS[winner];
+  $("persTag").textContent="See. Say. Own.";
+  $("persName").textContent=pr.name;
+  $("persBody").textContent=pr.body;
+  var grid=$("chgrid"); grid.innerHTML="";
+  KEYS.forEach(function(k){
+    var v=tallies[k];
+    var n=document.createElement("div"); n.className="chname"; n.textContent=VALUES[k].label; grid.appendChild(n);
+    var tr=document.createElement("div"); tr.className="chtrack";
+    var fl=document.createElement("div"); fl.className="chfill";
+    fl.setAttribute("data-w",(run.length? Math.round(v*100/run.length):0)+"%");
+    tr.appendChild(fl); grid.appendChild(tr);
+    var num=document.createElement("div"); num.className="chnum"; num.textContent=v; grid.appendChild(num);
+  });
+  setTimeout(function(){
+    var fills=document.querySelectorAll("#chgrid .chfill");
+    for(var i=0;i<fills.length;i++){ fills[i].style.width=fills[i].getAttribute("data-w"); }
+  },80);
+}
+
+$("startBtn").onclick=function(){ startRun(); };
+$("againBtn").onclick=function(){ show("menu"); };
+$("quitChip").onclick=function(){ show("menu"); };
+
+show("menu");
+})();
+</script>
+</body>
+</html>
